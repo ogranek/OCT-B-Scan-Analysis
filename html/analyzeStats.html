@@ -1,0 +1,183 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>analyzeStats</title><meta name="generator" content="MATLAB 9.2"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2018-02-24"><meta name="DC.source" content="analyzeStats.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>analyzeStats</h1><!--introduction--><p>analyzeStats returns a structure <i>stats</i> containing various statistics computed from the <i>means</i> , <i>stds</i> (standard deviations) and <i>DRs</i> (dynamic range) matrices (len X 4) . The new statistics are as follows. <img src="analyzeStats_eq18096895394918367257.png" alt="$f$"> stands for col 2 in the matrices (forground), <img src="analyzeStats_eq02044268985122151499.png" alt="$b$"> for col 1 (background), <img src="analyzeStats_eq15347993106352020686.png" alt="$\mu_i$"> is the mean of <img src="analyzeStats_eq05671228016298599287.png" alt="$i$"> and <img src="analyzeStats_eq04740202211481950950.png" alt="$\sigma_i$"> is the standard deviation of <img src="analyzeStats_eq05671228016298599287.png" alt="$i$">.</p><p>This program assumes image files exported from Heidelberg Engineering software, and requires each image to be given both in segmented and unsegmented form.</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Signal-Noise Ratio (SNR)</a></li><li><a href="#2">Contrast-Noise Ratio (CNR)</a></li><li><a href="#3">Effective Noise Level (ENL)</a></li><li><a href="#4">Copyright and License Notices</a></li><li><a href="#5">Code</a></li></ul></div><h2 id="1">Signal-Noise Ratio (SNR)</h2><p>Given by both of the two definitions:</p><div><ol><li><img src="analyzeStats_eq07847694592940195450.png" alt="$SNR=\frac{\mu_f}{\mu_b}$"></li><li><img src="analyzeStats_eq05736347850357003769.png" alt="$SNR=\frac{\mu_f}{\sigma_b}$"></li></ol></div><h2 id="2">Contrast-Noise Ratio (CNR)</h2><p>Given by</p><p><img src="analyzeStats_eq16415068837732431383.png" alt="$$CNR=\sqrt{2}\frac{\mu_{f}-\mu_{b}}{\sqrt{\sigma_{f}^{2}+\sigma_{b}^{2}}}$$"></p><h2 id="3">Effective Noise Level (ENL)</h2><p>Given by</p><p><img src="analyzeStats_eq02060196610455894508.png" alt="$$ENL=\mu_{f}/\sigma_{f}$$"></p><h2 id="4">Copyright and License Notices</h2><p>This file is part of "Assessing the Effect of Contact Lenses on the Image Quality of Retinal Spectral Domain Optical Coherence Tomography Using Automated Image Analysis" by Yinon Shapira, Talia Aviram, Omer Granak, Igor Viner, Erez Ribak, Eitan Z Blumenthal (2018).</p><p>Copyright &copy; 2017, 2018 Omer Granek</p><p>This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.</p><p>This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.</p><p>You should have received a copy of the GNU General Public License along with this program.  If not, see <a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>.</p><h2 id="5">Code</h2><pre class="codeinput"><span class="keyword">function</span> [ stats ] = analyzeStats( means, stds, DRs, len )
+stds(isnan(stds)) = 0; <span class="comment">%0s instead of NaNs</span>
+means(isnan(means)) = 0;
+
+stdAll = sqrt(sum(stds.^2)); <span class="comment">% global std: sum variances</span>
+meanAll = mean(means); <span class="comment">% global mean</span>
+len = len + 1;
+stds(len,:) = stdAll;
+means(len,:) = meanAll;
+
+SNRs = zeros(2, len, 2);
+CNRs = zeros(2, len);
+ENLs = zeros(len, 2);
+
+<span class="keyword">for</span> i = 1:2
+    k = i + 1;
+    fMean = means(:,k);
+    fStd = stds(:,k);
+    bMean = means(:,1);
+    bStd = stds(:,1);
+    stdTot = sqrt(sum(stds(:,[1 k]).^2, 2));
+    SNRs(1,:,i) = fMean ./ bMean;
+    SNRs(2,:,i) = fMean ./ bStd;
+    ENLs(:,i) = fMean ./ fStd;
+<span class="keyword">end</span>
+CNRs(1,:) = sqrt(2) * abs(fMean - bMean) ./ stdTot;
+
+stats = struct(<span class="string">'means'</span>,means,<span class="string">'stds'</span>,stds,<span class="string">'SNRs'</span>,SNRs,<span class="string">'CNRs'</span>,CNRs,<span class="keyword">...</span>
+    <span class="string">'ENLs'</span>,ENLs,<span class="string">'DRs'</span>,DRs);
+<span class="keyword">end</span>
+</pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2017a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% analyzeStats
+% analyzeStats returns a structure _stats_ containing various statistics
+% computed from the _means_ , _stds_ (standard deviations) and 
+% _DRs_ (dynamic range) matrices (len X 4) .
+% The new statistics are as follows. $f$ stands for col 2 in the matrices
+% (forground), $b$ for col 1 (background), $\mu_i$ is the mean of $i$ and 
+% $\sigma_i$ is the standard deviation of $i$.
+%
+% This program assumes image files exported from Heidelberg Engineering
+% software, and requires each image to be given both in segmented and
+% unsegmented form.
+%% Signal-Noise Ratio (SNR)
+% Given by both of the two definitions:
+% 
+% # $SNR=\frac{\mu_f}{\mu_b}$
+% # $SNR=\frac{\mu_f}{\sigma_b}$
+% 
+%% Contrast-Noise Ratio (CNR)
+% Given by
+% 
+% $$CNR=\sqrt{2}\frac{\mu_{f}-\mu_{b}}{\sqrt{\sigma_{f}^{2}+\sigma_{b}^{2}}}$$
+% 
+%% Effective Noise Level (ENL)
+% Given by
+% 
+% $$ENL=\mu_{f}/\sigma_{f}$$
+% 
+%% Copyright and License Notices
+% This file is part of
+% "Assessing the Effect of Contact Lenses on the Image Quality of Retinal
+% Spectral Domain Optical Coherence Tomography Using Automated Image
+% Analysis" by Yinon Shapira, Talia Aviram, Omer Granak, Igor Viner,
+% Erez Ribak, Eitan Z Blumenthal (2018).
+%
+% Copyright © 2017, 2018 Omer Granek
+%
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+% 
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with this program.  If not, see <http://www.gnu.org/licenses/>.
+%% Code
+function [ stats ] = analyzeStats( means, stds, DRs, len )
+stds(isnan(stds)) = 0; %0s instead of NaNs
+means(isnan(means)) = 0;
+
+stdAll = sqrt(sum(stds.^2)); % global std: sum variances
+meanAll = mean(means); % global mean
+len = len + 1;
+stds(len,:) = stdAll;
+means(len,:) = meanAll;
+
+SNRs = zeros(2, len, 2);
+CNRs = zeros(2, len);
+ENLs = zeros(len, 2);
+
+for i = 1:2
+    k = i + 1;
+    fMean = means(:,k);
+    fStd = stds(:,k);
+    bMean = means(:,1);
+    bStd = stds(:,1);
+    stdTot = sqrt(sum(stds(:,[1 k]).^2, 2));
+    SNRs(1,:,i) = fMean ./ bMean;
+    SNRs(2,:,i) = fMean ./ bStd;
+    ENLs(:,i) = fMean ./ fStd;
+end
+CNRs(1,:) = sqrt(2) * abs(fMean - bMean) ./ stdTot;
+
+stats = struct('means',means,'stds',stds,'SNRs',SNRs,'CNRs',CNRs,...
+    'ENLs',ENLs,'DRs',DRs);
+end
+
+
+##### SOURCE END #####
+--></body></html>
