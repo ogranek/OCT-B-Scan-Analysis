@@ -30,7 +30,7 @@
 % Analysis" by Yinon Shapira, Talia Aviram, Omer Granak, Igor Viner,
 % Erez Ribak, Eitan Z Blumenthal (2018).
 %
-% Copyright © 2017, 2018 Omer Granek
+% Copyright Â© 2017, 2018 Omer Granek
 %
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -57,7 +57,8 @@
 % * _DR_ - dynamic range scalar
 % * _h_ - figure handle
 % 
-function [ means, stds, DR, h ] = evaluateB( current, marked, bottom )
+function [ means, stds, DR, h ] = evaluateB( current, marked, bottom,...
+    cutStat )
 % Constants
 SIDE = 512;
 SIDE_MAX = 1008;
@@ -104,7 +105,8 @@ boundaries = findBoundaries(red, gray, SIDE, bottom, DELTA);
 vesselCut = bottom * vesselCut1D;
 
 % Compute standard deviation for each domain
-[means, stds] = computeStats(vesselCut, boundaries, gray, bottom, SIDE);
+[means, stds] = computeStats(vesselCut, boundaries, gray, bottom, SIDE,...
+    cutStat);
 
 % Compute dynamic range for the maximal vessel
 if (maxVesselPos(1) ~= 0)
@@ -330,7 +332,7 @@ end
 % removal or to use only the isolated blood vessel signal, see inline
 % documentation below.
 function [ means, stds ] = computeStats( vesselCut, boundaries, gray,...
-    bottom, side )
+    bottom, side, cutStat )
 stds = NaN(1,4);
 means = NaN(1,4);
 
@@ -338,28 +340,20 @@ rows = 1:bottom;
 for k = 1:4
     domain = [];
     for j = 1:side
-% Use the following to apply blood vessel removal:
-%
-        vesselsToRemove = (rows > vesselCut(j));
-         indexes = (rows > boundaries(1,j)) &...
-             (rows > boundaries(k,j) + 1) &...
-             (rows < boundaries(k + 1,j) - 1) & vesselsToRemove;
-%
-% Use the following instead of the previous to skip blood vessel removal:
-%
-%         indexes = (rows > boundaries(1,j)) &...
-%             (rows > boundaries(k,j) + 1) &...
-%             (rows < boundaries(k + 1,j) - 1);
-%
-% Use the following instead of the previous to use the isolated blood
-% vessel signal:
-%
-%         vesselsToRemove = (rows > vesselCut(j));
-%          indexes = (rows > boundaries(1,j)) &...
-%              (rows > boundaries(k,j) + 1) &...
-%              (rows < boundaries(k + 1,j) - 1) & ~vesselsToRemove;
-%
-
+switch cutStat %cutStat==0 => no cut, ==1 =>with cut, ow => only cut
+        case 0
+            indexes = (rows > boundaries(1,j)) &...
+                (rows > boundaries(k,j) + 1) &...
+                (rows < boundaries(k + 1,j) - 1);
+        case 1
+            indexes = (rows > boundaries(1,j)) &...
+                (rows > boundaries(k,j) + 1) &...
+                (rows < boundaries(k + 1,j) - 1) & vesselsToRemove;
+        otherwise
+           indexes = (rows > boundaries(1,j)) &...
+                (rows > boundaries(k,j) + 1) &...
+                (rows < boundaries(k + 1,j) - 1) & ~vesselsToRemove;
+    end
         domain = [domain; gray(indexes,j)];
     end
     stds(k) = std(cast(domain,'double'));
