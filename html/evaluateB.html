@@ -6,7 +6,7 @@
    <!--
 This HTML was auto-generated from MATLAB code.
 To make changes, update the MATLAB code and republish this document.
-      --><title>OCT B-Scan Statistical Evaluation</title><meta name="generator" content="MATLAB 9.2"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2018-02-24"><meta name="DC.source" content="evaluateB.m"><style type="text/css">
+      --><title>OCT B-Scan Statistical Evaluation</title><meta name="generator" content="MATLAB 9.2"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2018-11-22"><meta name="DC.source" content="evaluateB.m"><style type="text/css">
 html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
 
 html { min-height:100%; margin-bottom:1px; }
@@ -66,7 +66,8 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
 
 
 
-  </style></head><body><div class="content"><h1>OCT B-Scan Statistical Evaluation</h1><!--introduction--><p>The following functions process and evaluate basic statistics for each segment in a segmented OCT B-Scan, including mean, standard deviation and dynamics range <img src="evaluateB_eq16490025452294091095.png" alt="$DR$">, defined as</p><p><img src="evaluateB_eq00371298852236401406.png" alt="$$DR=\frac{\max S}{\min S}$$"></p><p>where <img src="evaluateB_eq14663648698641962978.png" alt="$S$"> is the summation signal vector, confined to the maximal blood vessel. <img src="evaluateB_eq14663648698641962978.png" alt="$S$"> is defined as the sum for each column in the image, from the left edge of the vessel to its right. Maximality is defined according to the average of <img src="evaluateB_eq14663648698641962978.png" alt="$S$">. By default, the blood vessel signals are removed from mean and standard deviation computations. This could be altered in the code, to either skip the vessel removal or using only the isolated vessel signal, as described below in computeStats.</p><p>This program makes use of the functions findpeaksG and finsqaurepulse by Thomas C. O'Haver (2014). See <a href="https://terpconnect.umd.edu/~toh/spectrum/SignalProcessingTools.html">Interactive Signal Processing Tools</a> for further information on these functions.</p><p>This program assumes image files exported from Heidelberg Engineering software, and requires each image to be given both in segmented and unsegmented form.</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Copyright and License Notices</a></li><li><a href="#2">evaluateB</a></li><li><a href="#3">removeYellowMarkings</a></li><li><a href="#4">removeLabels</a></li><li><a href="#5">findBoundaries</a></li><li><a href="#6">getVesselCut1D</a></li><li><a href="#7">computeStats</a></li></ul></div><h2 id="1">Copyright and License Notices</h2><p>This file is part of "Assessing the Effect of Contact Lenses on the Image Quality of Retinal Spectral Domain Optical Coherence Tomography Using Automated Image Analysis" by Yinon Shapira, Talia Aviram, Omer Granak, Igor Viner, Erez Ribak, Eitan Z Blumenthal (2018).</p><p>Copyright &copy; 2017, 2018 Omer Granek</p><p>This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.</p><p>This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.</p><p>You should have received a copy of the GNU General Public License along with this program.  If not, see <a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>.</p><h2 id="2">evaluateB</h2><p>evaluateB computes standard deviation of segmented retinal cuts. Assumes the defined constants below.</p><div><ul><li><i>current</i> - unsegmented cut image</li><li><i>marked</i> - segmented cut image</li><li><i>bottom</i> - row number for the boundary of relevant part</li><li><i>means</i> - mean vector from top to bottom, 4 sections total</li><li><i>stds</i> - standard deviation vector from top to bottom, 4 sections total</li><li><i>DR</i> - dynamic range scalar</li><li><i>h</i> - figure handle</li></ul></div><pre class="codeinput"><span class="keyword">function</span> [ means, stds, DR, h ] = evaluateB( current, marked, bottom )
+  </style></head><body><div class="content"><h1>OCT B-Scan Statistical Evaluation</h1><!--introduction--><p>The following functions process and evaluate basic statistics for each segment in a segmented OCT B-Scan, including mean, standard deviation and dynamics range <img src="evaluateB_eq16490025452294091095.png" alt="$DR$">, defined as</p><p><img src="evaluateB_eq00371298852236401406.png" alt="$$DR=\frac{\max S}{\min S}$$"></p><p>where <img src="evaluateB_eq14663648698641962978.png" alt="$S$"> is the summation signal vector, confined to the maximal blood vessel. <img src="evaluateB_eq14663648698641962978.png" alt="$S$"> is defined as the sum for each column in the image, from the left edge of the vessel to its right. Maximality is defined according to the average of <img src="evaluateB_eq14663648698641962978.png" alt="$S$">. By default, the blood vessel signals are removed from mean and standard deviation computations. This could be altered in the code, to either skip the vessel removal or using only the isolated vessel signal, as described below in computeStats.</p><p>This program makes use of the functions findpeaksG and finsqaurepulse by Thomas C. O'Haver (2014). See <a href="https://terpconnect.umd.edu/~toh/spectrum/SignalProcessingTools.html">Interactive Signal Processing Tools</a> for further information on these functions.</p><p>This program assumes image files exported from Heidelberg Engineering software, and requires each image to be given both in segmented and unsegmented form.</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Copyright and License Notices</a></li><li><a href="#2">evaluateB</a></li><li><a href="#3">removeYellowMarkings</a></li><li><a href="#4">removeLabels</a></li><li><a href="#5">findBoundaries</a></li><li><a href="#6">getVesselCut1D</a></li><li><a href="#7">computeStats</a></li></ul></div><h2 id="1">Copyright and License Notices</h2><p>This file is part of "Assessing the Effect of Contact Lenses on the Image Quality of Retinal Spectral Domain Optical Coherence Tomography Using Automated Image Analysis" by Yinon Shapira, Talia Aviram, Omer Granak, Igor Viner, Erez Ribak, Eitan Z Blumenthal (2018).</p><p>Copyright &copy; 2017, 2018 Omer Granek</p><p>This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.</p><p>This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.</p><p>You should have received a copy of the GNU General Public License along with this program.  If not, see <a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>.</p><h2 id="2">evaluateB</h2><p>evaluateB computes standard deviation of segmented retinal cuts. Assumes the defined constants below.</p><div><ul><li><i>current</i> - unsegmented cut image</li><li><i>marked</i> - segmented cut image</li><li><i>bottom</i> - row number for the boundary of relevant part</li><li><i>means</i> - mean vector from top to bottom, 4 sections total</li><li><i>stds</i> - standard deviation vector from top to bottom, 4 sections total</li><li><i>DR</i> - dynamic range scalar</li><li><i>h</i> - figure handle</li></ul></div><pre class="codeinput"><span class="keyword">function</span> [ means, stds, DR, h ] = evaluateB( current, marked, bottom,<span class="keyword">...</span>
+    cutStat )
 <span class="comment">% Constants</span>
 SIDE = 512;
 SIDE_MAX = 1008;
@@ -113,7 +114,8 @@ boundaries = findBoundaries(red, gray, SIDE, bottom, DELTA);
 vesselCut = bottom * vesselCut1D;
 
 <span class="comment">% Compute standard deviation for each domain</span>
-[means, stds] = computeStats(vesselCut, boundaries, gray, bottom, SIDE);
+[means, stds] = computeStats(vesselCut, boundaries, gray, bottom, SIDE,<span class="keyword">...</span>
+    cutStat);
 
 <span class="comment">% Compute dynamic range for the maximal vessel</span>
 <span class="keyword">if</span> (maxVesselPos(1) ~= 0)
@@ -311,7 +313,7 @@ maxVesselPos = [maxIntegral(1) min(maxIntegral(2),side)];
 
 <span class="keyword">end</span>
 </pre><h2 id="7">computeStats</h2><p>computeStats computes the mean and <i>stds</i> (standard deviations) vector for an image <i>gray</i> ( <i>bottom</i> X <i>side</i> ) with a <i>boundaries</i> matrix and a <i>vesselCut</i> (see findBoundaries and getVesselCut1D). This function can be modified to skip blood vessel removal or to use only the isolated blood vessel signal, see inline documentation below.</p><pre class="codeinput"><span class="keyword">function</span> [ means, stds ] = computeStats( vesselCut, boundaries, gray,<span class="keyword">...</span>
-    bottom, side )
+    bottom, side, cutStat )
 stds = NaN(1,4);
 means = NaN(1,4);
 
@@ -319,28 +321,20 @@ rows = 1:bottom;
 <span class="keyword">for</span> k = 1:4
     domain = [];
     <span class="keyword">for</span> j = 1:side
-<span class="comment">% Use the following to apply blood vessel removal:</span>
-<span class="comment">%</span>
-        vesselsToRemove = (rows &gt; vesselCut(j));
-         indexes = (rows &gt; boundaries(1,j)) &amp;<span class="keyword">...</span>
-             (rows &gt; boundaries(k,j) + 1) &amp;<span class="keyword">...</span>
-             (rows &lt; boundaries(k + 1,j) - 1) &amp; vesselsToRemove;
-<span class="comment">%</span>
-<span class="comment">% Use the following instead of the previous to skip blood vessel removal:</span>
-<span class="comment">%</span>
-<span class="comment">%         indexes = (rows &gt; boundaries(1,j)) &amp;...</span>
-<span class="comment">%             (rows &gt; boundaries(k,j) + 1) &amp;...</span>
-<span class="comment">%             (rows &lt; boundaries(k + 1,j) - 1);</span>
-<span class="comment">%</span>
-<span class="comment">% Use the following instead of the previous to use the isolated blood</span>
-<span class="comment">% vessel signal:</span>
-<span class="comment">%</span>
-<span class="comment">%         vesselsToRemove = (rows &gt; vesselCut(j));</span>
-<span class="comment">%          indexes = (rows &gt; boundaries(1,j)) &amp;...</span>
-<span class="comment">%              (rows &gt; boundaries(k,j) + 1) &amp;...</span>
-<span class="comment">%              (rows &lt; boundaries(k + 1,j) - 1) &amp; ~vesselsToRemove;</span>
-<span class="comment">%</span>
-
+<span class="keyword">switch</span> cutStat <span class="comment">%cutStat==0 =&gt; no cut, ==1 =&gt;with cut, ow =&gt; only cut</span>
+        <span class="keyword">case</span> 0
+            indexes = (rows &gt; boundaries(1,j)) &amp;<span class="keyword">...</span>
+                (rows &gt; boundaries(k,j) + 1) &amp;<span class="keyword">...</span>
+                (rows &lt; boundaries(k + 1,j) - 1);
+        <span class="keyword">case</span> 1
+            indexes = (rows &gt; boundaries(1,j)) &amp;<span class="keyword">...</span>
+                (rows &gt; boundaries(k,j) + 1) &amp;<span class="keyword">...</span>
+                (rows &lt; boundaries(k + 1,j) - 1) &amp; vesselsToRemove;
+        <span class="keyword">otherwise</span>
+           indexes = (rows &gt; boundaries(1,j)) &amp;<span class="keyword">...</span>
+                (rows &gt; boundaries(k,j) + 1) &amp;<span class="keyword">...</span>
+                (rows &lt; boundaries(k + 1,j) - 1) &amp; ~vesselsToRemove;
+    <span class="keyword">end</span>
         domain = [domain; gray(indexes,j)];
     <span class="keyword">end</span>
     stds(k) = std(cast(domain,<span class="string">'double'</span>));
@@ -408,7 +402,8 @@ rows = 1:bottom;
 % * _DR_ - dynamic range scalar
 % * _h_ - figure handle
 % 
-function [ means, stds, DR, h ] = evaluateB( current, marked, bottom )
+function [ means, stds, DR, h ] = evaluateB( current, marked, bottom,...
+    cutStat )
 % Constants
 SIDE = 512;
 SIDE_MAX = 1008;
@@ -455,7 +450,8 @@ boundaries = findBoundaries(red, gray, SIDE, bottom, DELTA);
 vesselCut = bottom * vesselCut1D;
 
 % Compute standard deviation for each domain
-[means, stds] = computeStats(vesselCut, boundaries, gray, bottom, SIDE);
+[means, stds] = computeStats(vesselCut, boundaries, gray, bottom, SIDE,...
+    cutStat);
 
 % Compute dynamic range for the maximal vessel
 if (maxVesselPos(1) ~= 0)
@@ -681,7 +677,7 @@ end
 % removal or to use only the isolated blood vessel signal, see inline
 % documentation below.
 function [ means, stds ] = computeStats( vesselCut, boundaries, gray,...
-    bottom, side )
+    bottom, side, cutStat )
 stds = NaN(1,4);
 means = NaN(1,4);
 
@@ -689,28 +685,20 @@ rows = 1:bottom;
 for k = 1:4
     domain = [];
     for j = 1:side
-% Use the following to apply blood vessel removal:
-%
-        vesselsToRemove = (rows > vesselCut(j));
-         indexes = (rows > boundaries(1,j)) &...
-             (rows > boundaries(k,j) + 1) &...
-             (rows < boundaries(k + 1,j) - 1) & vesselsToRemove;
-%
-% Use the following instead of the previous to skip blood vessel removal:
-%
-%         indexes = (rows > boundaries(1,j)) &...
-%             (rows > boundaries(k,j) + 1) &...
-%             (rows < boundaries(k + 1,j) - 1);
-%
-% Use the following instead of the previous to use the isolated blood
-% vessel signal:
-%
-%         vesselsToRemove = (rows > vesselCut(j));
-%          indexes = (rows > boundaries(1,j)) &...
-%              (rows > boundaries(k,j) + 1) &...
-%              (rows < boundaries(k + 1,j) - 1) & ~vesselsToRemove;
-%
-
+switch cutStat %cutStat==0 => no cut, ==1 =>with cut, ow => only cut
+        case 0
+            indexes = (rows > boundaries(1,j)) &...
+                (rows > boundaries(k,j) + 1) &...
+                (rows < boundaries(k + 1,j) - 1);
+        case 1
+            indexes = (rows > boundaries(1,j)) &...
+                (rows > boundaries(k,j) + 1) &...
+                (rows < boundaries(k + 1,j) - 1) & vesselsToRemove;
+        otherwise
+           indexes = (rows > boundaries(1,j)) &...
+                (rows > boundaries(k,j) + 1) &...
+                (rows < boundaries(k + 1,j) - 1) & ~vesselsToRemove;
+    end
         domain = [domain; gray(indexes,j)];
     end
     stds(k) = std(cast(domain,'double'));
