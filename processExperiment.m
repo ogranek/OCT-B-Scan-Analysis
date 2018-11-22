@@ -19,7 +19,7 @@
 % Analysis" by Yinon Shapira, Talia Aviram, Omer Granak, Igor Viner,
 % Erez Ribak, Eitan Z Blumenthal (2018).
 %
-% Copyright © 2017, 2018 Omer Granek and Erez Ribak
+% Copyright Â© 2017, 2018 Omer Granek
 %
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -45,9 +45,11 @@ octNoSegDir = [octDir '\without segmentation'];
  % set to dir containing images without sigmentation
 octSegDir = [octDir '\with segmentation'];
 saveFigures = false;
-numOfParticipants = 20;
+numFirstPatient = 1;
+numLastPatient = 20;
+cutStat = 1; %cutStat==0 => no cut, ==1 =>with cut, ow => only cut
 
-for b = 1:numOfParticipants
+for b = numFirstPatient:numLastPatient %patient numbering
     %read from directory with and without segmentation
     zdSub = num2str(b);
     zd = [octNoSegDir '\' zdSub];
@@ -74,7 +76,9 @@ for b = 1:numOfParticipants
                 fname = [pathname '\' dirinfo(floor((ld-2) * j / 3)).name];
                 zz{j} = imread(fname);
             end
-            if saveFigures, figs = gobjects(1,ld - 2); end
+            if saveFigures
+                figs = gobjects(1,ld - 2);
+            end
             
             for l = ln
                 %includes face-on and cut
@@ -84,26 +88,19 @@ for b = 1:numOfParticipants
                 % skips missing files for standard dev. comp.
                 segExists = (exist(fnameSeg, 'file') == 2);
                 zz = imread (fname);
-                if segExists, zzSeg = imread(fnameSeg); end
-                z = double(zz (1:420, 497:1008, 1)); % keep only 2d cut
-                
-                % horizontal power spectrum
-                fth = abs (fft (z)); fth2 = fth .* fth; 
-                % add to previous power spectra
-                fsh1 = fsh1 + fth; fsh2 = fsh2 + fth2;
-                % vertical power spectrum
-                ftv = abs (fft (z, 768, 2)); ftv2 = ftv .* ftv;
-                % add to previous power spectra
-                fsv1 = fsv1 + ftv; fsv2 = fsv2 + ftv2; 
+                if segExists
+                    zzSeg = imread(fnameSeg);
+                end
                 
                 %standard dev. of 4 segments
                 if segExists
                     if saveFigures
                         [means(l-2, :), stds(l-2, :), DRs(l-2), ...
-                            figs(l-2)] = evaluateB(zz, zzSeg, 420);
+                            figs(l-2)] = evaluateB(zz, zzSeg, 420,...
+                            cutStat);
                     else
                         [means(l-2, :), stds(l-2, :), DRs(l-2), ~] = ...
-                            evaluateB(zz, zzSeg, 420);
+                            evaluateB(zz, zzSeg, 420, cutStat);
                     end
                 end
             end
@@ -117,15 +114,12 @@ for b = 1:numOfParticipants
             end
             fsave = [analysisDir saveNulls fsaveSub];
             
-            % save average power spectra of cuts and standard devs.,
-            % change directory name to Fouriers
+            % save stats.,
             if segExists
-                save([fsave '.mat'], 'fsh1', 'fsh2', 'fsv1', 'fsv2', 'stats');
+                save([fsave '.mat'], 'stats');
                 if saveFigures,
                     savefig(figs, [fsave '.fig']);
                 end
-            else
-                save(fsave, 'fsh1', 'fsh2', 'fsv1', 'fsv2');
             end
         end
     end
