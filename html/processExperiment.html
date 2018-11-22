@@ -6,7 +6,7 @@
    <!--
 This HTML was auto-generated from MATLAB code.
 To make changes, update the MATLAB code and republish this document.
-      --><title>processExperiment</title><meta name="generator" content="MATLAB 9.2"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2018-02-24"><meta name="DC.source" content="processExperiment.m"><style type="text/css">
+      --><title>processExperiment</title><meta name="generator" content="MATLAB 9.2"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2018-11-22"><meta name="DC.source" content="processExperiment.m"><style type="text/css">
 html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
 
 html { min-height:100%; margin-bottom:1px; }
@@ -66,7 +66,7 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
 
 
 
-  </style></head><body><div class="content"><h1>processExperiment</h1><!--introduction--><p>This script processes an entire OCT based experiment including multiple participants and configurations. It makes use of the functions evaluateB and analyzeStats, given seperately.</p><p>This program assumes image files exported from Heidelberg Engineering software, and requires each image to be given both in segmented and unsegmented form.</p><p>The script assumes that within each input directory, there are numOfParticipants directories labeled as 1,2...,numOfParticipants. Within each of the latter there should be two directories, one for each configuration labled in '####i' format, where i=1,2. Within each of the latter, there should be a constant number of OCT B-Scan images.</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Copyright and License Notices</a></li><li><a href="#2">Code</a></li></ul></div><h2 id="1">Copyright and License Notices</h2><p>This file is part of "Assessing the Effect of Contact Lenses on the Image Quality of Retinal Spectral Domain Optical Coherence Tomography Using Automated Image Analysis" by Yinon Shapira, Talia Aviram, Omer Granak, Igor Viner, Erez Ribak, Eitan Z Blumenthal (2018).</p><p>Copyright &copy; 2017, 2018 Omer Granek and Erez Ribak</p><p>This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.</p><p>This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.</p><p>You should have received a copy of the GNU General Public License along with this program.  If not, see <a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>.</p><h2 id="2">Code</h2><pre class="codeinput"><span class="comment">% preliminaries</span>
+  </style></head><body><div class="content"><h1>processExperiment</h1><!--introduction--><p>This script processes an entire OCT based experiment including multiple participants and configurations. It makes use of the functions evaluateB and analyzeStats, given seperately.</p><p>This program assumes image files exported from Heidelberg Engineering software, and requires each image to be given both in segmented and unsegmented form.</p><p>The script assumes that within each input directory, there are numOfParticipants directories labeled as 1,2...,numOfParticipants. Within each of the latter there should be two directories, one for each configuration labled in '####i' format, where i=1,2. Within each of the latter, there should be a constant number of OCT B-Scan images.</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Copyright and License Notices</a></li><li><a href="#2">Code</a></li></ul></div><h2 id="1">Copyright and License Notices</h2><p>This file is part of "Assessing the Effect of Contact Lenses on the Image Quality of Retinal Spectral Domain Optical Coherence Tomography Using Automated Image Analysis" by Yinon Shapira, Talia Aviram, Omer Granak, Igor Viner, Erez Ribak, Eitan Z Blumenthal (2018).</p><p>Copyright &copy; 2017, 2018 Omer Granek</p><p>This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.</p><p>This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.</p><p>You should have received a copy of the GNU General Public License along with this program.  If not, see <a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>.</p><h2 id="2">Code</h2><pre class="codeinput"><span class="comment">% preliminaries</span>
 close <span class="string">all</span>; clearvars; clc;
 analysisDir = <span class="string">'Analysis\With Vessels'</span>; <span class="comment">% set to desired dir for output</span>
 octDir = <span class="string">'OCT'</span>;
@@ -75,9 +75,11 @@ octNoSegDir = [octDir <span class="string">'\without segmentation'</span>];
  <span class="comment">% set to dir containing images without sigmentation</span>
 octSegDir = [octDir <span class="string">'\with segmentation'</span>];
 saveFigures = false;
-numOfParticipants = 20;
+numFirstPatient = 1;
+numLastPatient = 20;
+cutStat = 1; <span class="comment">%cutStat==0 =&gt; no cut, ==1 =&gt;with cut, ow =&gt; only cut</span>
 
-<span class="keyword">for</span> b = 1:numOfParticipants
+<span class="keyword">for</span> b = numFirstPatient:numLastPatient <span class="comment">%patient numbering</span>
     <span class="comment">%read from directory with and without segmentation</span>
     zdSub = num2str(b);
     zd = [octNoSegDir <span class="string">'\'</span> zdSub];
@@ -104,7 +106,9 @@ numOfParticipants = 20;
                 fname = [pathname <span class="string">'\'</span> dirinfo(floor((ld-2) * j / 3)).name];
                 zz{j} = imread(fname);
             <span class="keyword">end</span>
-            <span class="keyword">if</span> saveFigures, figs = gobjects(1,ld - 2); <span class="keyword">end</span>
+            <span class="keyword">if</span> saveFigures
+                figs = gobjects(1,ld - 2);
+            <span class="keyword">end</span>
 
             <span class="keyword">for</span> l = ln
                 <span class="comment">%includes face-on and cut</span>
@@ -114,26 +118,19 @@ numOfParticipants = 20;
                 <span class="comment">% skips missing files for standard dev. comp.</span>
                 segExists = (exist(fnameSeg, <span class="string">'file'</span>) == 2);
                 zz = imread (fname);
-                <span class="keyword">if</span> segExists, zzSeg = imread(fnameSeg); <span class="keyword">end</span>
-                z = double(zz (1:420, 497:1008, 1)); <span class="comment">% keep only 2d cut</span>
-
-                <span class="comment">% horizontal power spectrum</span>
-                fth = abs (fft (z)); fth2 = fth .* fth;
-                <span class="comment">% add to previous power spectra</span>
-                fsh1 = fsh1 + fth; fsh2 = fsh2 + fth2;
-                <span class="comment">% vertical power spectrum</span>
-                ftv = abs (fft (z, 768, 2)); ftv2 = ftv .* ftv;
-                <span class="comment">% add to previous power spectra</span>
-                fsv1 = fsv1 + ftv; fsv2 = fsv2 + ftv2;
+                <span class="keyword">if</span> segExists
+                    zzSeg = imread(fnameSeg);
+                <span class="keyword">end</span>
 
                 <span class="comment">%standard dev. of 4 segments</span>
                 <span class="keyword">if</span> segExists
                     <span class="keyword">if</span> saveFigures
                         [means(l-2, :), stds(l-2, :), DRs(l-2), <span class="keyword">...</span>
-                            figs(l-2)] = evaluateB(zz, zzSeg, 420);
+                            figs(l-2)] = evaluateB(zz, zzSeg, 420,<span class="keyword">...</span>
+                            cutStat);
                     <span class="keyword">else</span>
                         [means(l-2, :), stds(l-2, :), DRs(l-2), ~] = <span class="keyword">...</span>
-                            evaluateB(zz, zzSeg, 420);
+                            evaluateB(zz, zzSeg, 420, cutStat);
                     <span class="keyword">end</span>
                 <span class="keyword">end</span>
             <span class="keyword">end</span>
@@ -147,15 +144,12 @@ numOfParticipants = 20;
             <span class="keyword">end</span>
             fsave = [analysisDir saveNulls fsaveSub];
 
-            <span class="comment">% save average power spectra of cuts and standard devs.,</span>
-            <span class="comment">% change directory name to Fouriers</span>
+            <span class="comment">% save stats.,</span>
             <span class="keyword">if</span> segExists
-                save([fsave <span class="string">'.mat'</span>], <span class="string">'fsh1'</span>, <span class="string">'fsh2'</span>, <span class="string">'fsv1'</span>, <span class="string">'fsv2'</span>, <span class="string">'stats'</span>);
+                save([fsave <span class="string">'.mat'</span>], <span class="string">'stats'</span>);
                 <span class="keyword">if</span> saveFigures,
                     savefig(figs, [fsave <span class="string">'.fig'</span>]);
                 <span class="keyword">end</span>
-            <span class="keyword">else</span>
-                save(fsave, <span class="string">'fsh1'</span>, <span class="string">'fsh2'</span>, <span class="string">'fsv1'</span>, <span class="string">'fsv2'</span>);
             <span class="keyword">end</span>
         <span class="keyword">end</span>
     <span class="keyword">end</span>
@@ -183,7 +177,7 @@ numOfParticipants = 20;
 % Analysis" by Yinon Shapira, Talia Aviram, Omer Granak, Igor Viner,
 % Erez Ribak, Eitan Z Blumenthal (2018).
 %
-% Copyright © 2017, 2018 Omer Granek and Erez Ribak
+% Copyright © 2017, 2018 Omer Granek
 %
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -209,9 +203,11 @@ octNoSegDir = [octDir '\without segmentation'];
  % set to dir containing images without sigmentation
 octSegDir = [octDir '\with segmentation'];
 saveFigures = false;
-numOfParticipants = 20;
+numFirstPatient = 1;
+numLastPatient = 20;
+cutStat = 1; %cutStat==0 => no cut, ==1 =>with cut, ow => only cut
 
-for b = 1:numOfParticipants
+for b = numFirstPatient:numLastPatient %patient numbering
     %read from directory with and without segmentation
     zdSub = num2str(b);
     zd = [octNoSegDir '\' zdSub];
@@ -238,7 +234,9 @@ for b = 1:numOfParticipants
                 fname = [pathname '\' dirinfo(floor((ld-2) * j / 3)).name];
                 zz{j} = imread(fname);
             end
-            if saveFigures, figs = gobjects(1,ld - 2); end
+            if saveFigures
+                figs = gobjects(1,ld - 2);
+            end
             
             for l = ln
                 %includes face-on and cut
@@ -248,26 +246,19 @@ for b = 1:numOfParticipants
                 % skips missing files for standard dev. comp.
                 segExists = (exist(fnameSeg, 'file') == 2);
                 zz = imread (fname);
-                if segExists, zzSeg = imread(fnameSeg); end
-                z = double(zz (1:420, 497:1008, 1)); % keep only 2d cut
-                
-                % horizontal power spectrum
-                fth = abs (fft (z)); fth2 = fth .* fth; 
-                % add to previous power spectra
-                fsh1 = fsh1 + fth; fsh2 = fsh2 + fth2;
-                % vertical power spectrum
-                ftv = abs (fft (z, 768, 2)); ftv2 = ftv .* ftv;
-                % add to previous power spectra
-                fsv1 = fsv1 + ftv; fsv2 = fsv2 + ftv2; 
+                if segExists
+                    zzSeg = imread(fnameSeg);
+                end
                 
                 %standard dev. of 4 segments
                 if segExists
                     if saveFigures
                         [means(l-2, :), stds(l-2, :), DRs(l-2), ...
-                            figs(l-2)] = evaluateB(zz, zzSeg, 420);
+                            figs(l-2)] = evaluateB(zz, zzSeg, 420,...
+                            cutStat);
                     else
                         [means(l-2, :), stds(l-2, :), DRs(l-2), ~] = ...
-                            evaluateB(zz, zzSeg, 420);
+                            evaluateB(zz, zzSeg, 420, cutStat);
                     end
                 end
             end
@@ -281,15 +272,12 @@ for b = 1:numOfParticipants
             end
             fsave = [analysisDir saveNulls fsaveSub];
             
-            % save average power spectra of cuts and standard devs.,
-            % change directory name to Fouriers
+            % save stats.,
             if segExists
-                save([fsave '.mat'], 'fsh1', 'fsh2', 'fsv1', 'fsv2', 'stats');
+                save([fsave '.mat'], 'stats');
                 if saveFigures,
                     savefig(figs, [fsave '.fig']);
                 end
-            else
-                save(fsave, 'fsh1', 'fsh2', 'fsv1', 'fsv2');
             end
         end
     end
