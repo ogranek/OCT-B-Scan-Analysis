@@ -1,0 +1,314 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>processExperiment</title><meta name="generator" content="MATLAB 9.2"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2018-12-29"><meta name="DC.source" content="processExperiment.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>processExperiment</h1><!--introduction--><p>This script processes an entire OCT based experiment including multiple participants and configurations. It makes use of the functions evaluateB and analyzeStats, given seperately.</p><p>This program assumes image files exported from Heidelberg Engineering software, and requires each image to be given both in segmented and unsegmented form.</p><p>The script assumes that within each input directory, there are numOfParticipants directories labeled as 1,2...,numOfParticipants. Within each of the latter there should be two directories, one for each configuration labled in '####i' format, where i=1,2. Within each of the latter, there should be a constant number of OCT B-Scan images.</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Copyright and License Notices</a></li><li><a href="#2">Code</a></li></ul></div><h2 id="1">Copyright and License Notices</h2><p>This file is part of "Assessing the Effect of Contact Lenses on the Image Quality of Retinal Spectral Domain Optical Coherence Tomography Using Automated Image Analysis" by Yinon Shapira, Talia Aviram, Omer Granak, Igor Viner, Erez Ribak, Eitan Z Blumenthal (2018).</p><p>Copyright &copy; 2017, 2018 Omer Granek</p><p>This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.</p><p>This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.</p><p>You should have received a copy of the GNU General Public License along with this program.  If not, see <a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>.</p><h2 id="2">Code</h2><pre class="codeinput"><span class="comment">% preliminaries</span>
+close <span class="string">all</span>; clearvars; clc;
+analysisDir = <span class="string">'C:\Users\omer.granek\OneDrive - Technion\Eyes\idan analysis\cut only'</span>; <span class="comment">% set to desired dir for output</span>
+octDir = <span class="string">'C:\Users\omer.granek\OneDrive - Technion\Eyes\OCT idan'</span>;
+ <span class="comment">% set to dir containing images with segmentation</span>
+octNoSegDir = [octDir <span class="string">'\without segmentation'</span>];
+ <span class="comment">% set to dir containing images without sigmentation</span>
+octSegDir = [octDir <span class="string">'\with segmentation'</span>];
+saveFigures = false;
+numFirstPatient = 1;
+numLastPatient = 20;
+cutStat = 2; <span class="comment">%cutStat==0 =&gt; no cut, ==1 =&gt;with cut, ow =&gt; only cut</span>
+
+<span class="keyword">for</span> b = numFirstPatient:numLastPatient <span class="comment">%patient numbering</span>
+    <span class="comment">%read from directory with and without segmentation</span>
+    zdSub = num2str(b);
+    zd = [octNoSegDir <span class="string">'\'</span> zdSub];
+    zdSeg = [octSegDir <span class="string">'\'</span> zdSub];
+    <span class="keyword">if</span> isdir(zd)
+        dd = dir(zd);
+        ddSeg = dir(zdSeg);
+        <span class="keyword">for</span> c = 1:2 <span class="comment">% without / with contact</span>
+            pathnameSub = dd(c+2).name;
+            pathnameSegSub = ddSeg(c+2).name;
+            fsaveSub = [zdSub regexprep(pathnameSub,{<span class="string">'\.'</span>,<span class="string">' '</span>},<span class="string">''</span>)];
+            pathname = [zd <span class="string">'\'</span> pathnameSub]; disp(pathname)
+            pathnameSeg = [zdSeg <span class="string">'\'</span> pathnameSegSub];
+
+            <span class="comment">% cuts</span>
+            dirinfo = dir (pathname); ld = length(dirinfo);
+            names = cell(1,ld);
+            indecesToRemove = zeros(1,3);
+            <span class="keyword">for</span> i = 1:ld
+                names{i} = dirinfo(i).name;
+                <span class="keyword">switch</span> names{i}
+                    <span class="keyword">case</span> <span class="string">'.'</span>
+                        indecesToRemove(1) = i;
+                    <span class="keyword">case</span> <span class="string">'..'</span>
+                        indecesToRemove(2) = i;
+                    <span class="keyword">case</span> <span class="string">'Thumbs.db'</span>
+                        indecesToRemove(3) = i;
+                <span class="keyword">end</span>
+            <span class="keyword">end</span>
+            ln = setdiff(1:ld,indecesToRemove);
+            fsh1 = 0; fsh2 = 0; fsv1 = 0; fsv2 = 0;
+            means = zeros(ld - 2, 4);
+            stds = zeros(ld - 2, 4);
+            DRs = zeros(ld - 2, 1);
+
+            zz = cell(1,2);
+            <span class="keyword">for</span> j = 1:2
+                fname = [pathname <span class="string">'\'</span> dirinfo(floor((ld-2) * j / 3)).name];
+                zz{j} = imread(fname);
+            <span class="keyword">end</span>
+            <span class="keyword">if</span> saveFigures
+                figs = gobjects(1,ld - 2);
+            <span class="keyword">end</span>
+
+            <span class="keyword">for</span> l = ln
+                <span class="comment">%includes face-on and cut</span>
+                fname = [pathname <span class="string">'\'</span> dirinfo(l).name];
+                <span class="comment">%with segmentation</span>
+                fnameSeg = [pathnameSeg <span class="string">'\'</span> dirinfo(l).name];
+                <span class="comment">% skips missing files for standard dev. comp.</span>
+                segExists = (exist(fnameSeg, <span class="string">'file'</span>) == 2);
+                zz = imread (fname);
+                <span class="keyword">if</span> segExists
+                    zzSeg = imread(fnameSeg);
+                <span class="keyword">end</span>
+
+                <span class="comment">%standard dev. of 4 segments</span>
+                <span class="keyword">if</span> segExists
+                    <span class="keyword">if</span> saveFigures
+                        [means(l-2, :), stds(l-2, :), DRs(l-2), <span class="keyword">...</span>
+                            figs(l-2)] = evaluateB(zz, zzSeg, 420,<span class="keyword">...</span>
+                            cutStat);
+                    <span class="keyword">else</span>
+                        [means(l-2, :), stds(l-2, :), DRs(l-2), ~] = <span class="keyword">...</span>
+                            evaluateB(zz, zzSeg, 420, cutStat);
+                    <span class="keyword">end</span>
+                <span class="keyword">end</span>
+            <span class="keyword">end</span>
+
+            <span class="comment">% obtain further stats</span>
+            stats = analyzeStats(means, stds, DRs, ld - 2);
+            <span class="keyword">if</span> (b &lt; 10)
+                saveNulls = <span class="string">'\00'</span>;
+            <span class="keyword">else</span>
+                saveNulls = <span class="string">'\0'</span>;
+            <span class="keyword">end</span>
+            fsave = [analysisDir saveNulls fsaveSub];
+
+            <span class="comment">% save stats.,</span>
+            <span class="keyword">if</span> segExists
+                save([fsave <span class="string">'.mat'</span>], <span class="string">'stats'</span>);
+                <span class="keyword">if</span> saveFigures,
+                    savefig(figs, [fsave <span class="string">'.fig'</span>]);
+                <span class="keyword">end</span>
+            <span class="keyword">end</span>
+        <span class="keyword">end</span>
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+</pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2017a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% processExperiment
+% This script processes an entire OCT based experiment including multiple
+% participants and configurations. It makes use of the functions evaluateB
+% and analyzeStats, given seperately.
+%
+% This program assumes image files exported from Heidelberg Engineering
+% software, and requires each image to be given both in segmented and
+% unsegmented form.
+%
+% The script assumes that within each input directory, there are
+% numOfParticipants directories labeled as 1,2...,numOfParticipants.
+% Within each of the latter there should be two directories, one for each
+% configuration labled in '####i' format, where i=1,2. Within each of the
+% latter, there should be a constant number of OCT B-Scan images.
+%% Copyright and License Notices
+% This file is part of
+% "Assessing the Effect of Contact Lenses on the Image Quality of Retinal
+% Spectral Domain Optical Coherence Tomography Using Automated Image
+% Analysis" by Yinon Shapira, Talia Aviram, Omer Granak, Igor Viner,
+% Erez Ribak, Eitan Z Blumenthal (2018).
+%
+% Copyright © 2017, 2018 Omer Granek
+%
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+% 
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+%% Code
+
+% preliminaries
+close all; clearvars; clc;
+analysisDir = 'C:\Users\omer.granek\OneDrive - Technion\Eyes\idan analysis\cut only'; % set to desired dir for output
+octDir = 'C:\Users\omer.granek\OneDrive - Technion\Eyes\OCT idan';
+ % set to dir containing images with segmentation
+octNoSegDir = [octDir '\without segmentation'];
+ % set to dir containing images without sigmentation
+octSegDir = [octDir '\with segmentation'];
+saveFigures = false;
+numFirstPatient = 1;
+numLastPatient = 20;
+cutStat = 2; %cutStat==0 => no cut, ==1 =>with cut, ow => only cut
+
+for b = numFirstPatient:numLastPatient %patient numbering
+    %read from directory with and without segmentation
+    zdSub = num2str(b);
+    zd = [octNoSegDir '\' zdSub];
+    zdSeg = [octSegDir '\' zdSub];
+    if isdir(zd)
+        dd = dir(zd);
+        ddSeg = dir(zdSeg);
+        for c = 1:2 % without / with contact
+            pathnameSub = dd(c+2).name;
+            pathnameSegSub = ddSeg(c+2).name;
+            fsaveSub = [zdSub regexprep(pathnameSub,{'\.',' '},'')];
+            pathname = [zd '\' pathnameSub]; disp(pathname)
+            pathnameSeg = [zdSeg '\' pathnameSegSub];
+            
+            % cuts
+            dirinfo = dir (pathname); ld = length(dirinfo);
+            names = cell(1,ld);
+            indecesToRemove = zeros(1,3);
+            for i = 1:ld
+                names{i} = dirinfo(i).name;
+                switch names{i}
+                    case '.'
+                        indecesToRemove(1) = i;
+                    case '..'
+                        indecesToRemove(2) = i;
+                    case 'Thumbs.db'
+                        indecesToRemove(3) = i;
+                end
+            end
+            ln = setdiff(1:ld,indecesToRemove);
+            fsh1 = 0; fsh2 = 0; fsv1 = 0; fsv2 = 0;
+            means = zeros(ld - 2, 4);
+            stds = zeros(ld - 2, 4);
+            DRs = zeros(ld - 2, 1);
+            
+            zz = cell(1,2);
+            for j = 1:2
+                fname = [pathname '\' dirinfo(floor((ld-2) * j / 3)).name];
+                zz{j} = imread(fname);
+            end
+            if saveFigures
+                figs = gobjects(1,ld - 2);
+            end
+            
+            for l = ln
+                %includes face-on and cut
+                fname = [pathname '\' dirinfo(l).name];
+                %with segmentation
+                fnameSeg = [pathnameSeg '\' dirinfo(l).name];
+                % skips missing files for standard dev. comp.
+                segExists = (exist(fnameSeg, 'file') == 2);
+                zz = imread (fname);
+                if segExists
+                    zzSeg = imread(fnameSeg);
+                end
+                
+                %standard dev. of 4 segments
+                if segExists
+                    if saveFigures
+                        [means(l-2, :), stds(l-2, :), DRs(l-2), ...
+                            figs(l-2)] = evaluateB(zz, zzSeg, 420,...
+                            cutStat);
+                    else
+                        [means(l-2, :), stds(l-2, :), DRs(l-2), ~] = ...
+                            evaluateB(zz, zzSeg, 420, cutStat);
+                    end
+                end
+            end
+            
+            % obtain further stats
+            stats = analyzeStats(means, stds, DRs, ld - 2);
+            if (b < 10)
+                saveNulls = '\00';
+            else
+                saveNulls = '\0';
+            end
+            fsave = [analysisDir saveNulls fsaveSub];
+            
+            % save stats.,
+            if segExists
+                save([fsave '.mat'], 'stats');
+                if saveFigures,
+                    savefig(figs, [fsave '.fig']);
+                end
+            end
+        end
+    end
+end
+##### SOURCE END #####
+--></body></html>
